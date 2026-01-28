@@ -1,0 +1,6 @@
+@ThirdStepTask.API_HostAddress = http://localhost:5186
+
+GET {{ThirdStepTask.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
