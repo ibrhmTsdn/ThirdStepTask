@@ -1,0 +1,185 @@
+# ====================
+# NETWORKS
+# ====================
+networks:
+  microservices-network:
+    driver: bridge
+
+# ====================
+# VOLUMES
+# ====================
+volumes:
+  sqlserver-data:
+  redis-data:
+  rabbitmq-data:
+
+# ====================
+# SERVICES
+# ====================
+services:
+  
+  # ====================
+  # Infrastructure Services
+  # ====================
+  
+  # SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Ibrahim38-
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - microservices-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Ibrahim38- -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - microservices-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ====================
+  # Microservices
+  # ====================
+
+  # API Gateway
+  gateway-api:
+    build:
+      context: .
+      dockerfile: src/ApiGateway/Gateway.API/DockerFile
+    container_name: gateway-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - Jwt__SecretKey=ThirdStepTaskSuperSecretKey_256Bits_Minimum!
+      - Jwt__Issuer=MicroservicesAuth
+      - Jwt__Audience=MicroservicesAPI
+      - RateLimiting__GlobalLimit=1000
+      - RateLimiting__PerIpLimit=100
+      - RateLimiting__WindowSeconds=60
+    ports:
+      - "5000:80"
+    depends_on:
+      auth-api:
+        condition: service_healthy
+      product-api:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Auth Service
+  auth-api:
+    build:
+      context: .
+      dockerfile: src/Services/Auth/ThirdStepTask.Auth.API/DockerFile
+    container_name: auth-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=AuthDb;User Id=sa;Password=Ibrahim38-;TrustServerCertificate=True;
+      - Jwt__SecretKey=YourSuperSecretKeyForJWTTokenGenerationMustBeAtLeast32Characters
+      - Jwt__Issuer=MicroservicesAuth
+      - Jwt__Audience=MicroservicesAPI
+      - Jwt__AccessTokenExpirationMinutes=30
+      - Jwt__RefreshTokenExpirationDays=7
+    ports:
+      - "5001:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Product Service
+  product-api:
+    build:
+      context: .
+      dockerfile: src/Services/Product/ThirdStepTask.Product.API/DockerFile
+    container_name: product-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ProductDb;User Id=sa;Password=Ibrahim38-;TrustServerCertificate=True;
+      - ConnectionStrings__Redis=redis:6379
+      - Jwt__SecretKey=YourSuperSecretKeyForJWTTokenGenerationMustBeAtLeast32Characters
+      - Jwt__Issuer=MicroservicesAuth
+      - Jwt__Audience=MicroservicesAPI
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+      - RateLimiting__RequestLimit=100
+      - RateLimiting__TimeWindowMinutes=1
+    ports:
+      - "5002:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

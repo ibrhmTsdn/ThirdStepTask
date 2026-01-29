@@ -1,0 +1,41 @@
+# Development-specific overrides
+services:
+
+  gateway-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Serilog__MinimumLevel__Default=Debug
+    volumes:
+      - ./logs/gateway:/app/logs
+  
+  auth-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Serilog__MinimumLevel__Default=Debug
+    volumes:
+      # Mount logs directory for easy access
+      - ./logs/auth:/app/logs
+
+  product-api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Serilog__MinimumLevel__Default=Debug
+    volumes:
+      # Mount logs directory for easy access
+      - ./logs/product:/app/logs
+
+  # Portainer for Docker Management (Development Only)
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+volumes:
+  portainer-data:
