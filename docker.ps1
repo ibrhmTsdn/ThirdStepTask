@@ -22,7 +22,7 @@ switch ($Command) {
         Write-Host "📝 API Gateway: http://localhost:5000" -ForegroundColor Cyan
         Write-Host "📝 Auth API: http://localhost:5001" -ForegroundColor Cyan
         Write-Host "📝 Product API: http://localhost:5002" -ForegroundColor Cyan
-        Write-Host "📝 SQL Server: localhost:1433 (sa/MyProject2024!@#)" -ForegroundColor Cyan
+        Write-Host "📝 SQL Server: localhost:1433 (sa/Ibrahim38-)" -ForegroundColor Cyan
         Write-Host "📝 Redis: localhost:6379" -ForegroundColor Cyan
         Write-Host "📝 RabbitMQ Management: http://localhost:15672 (guest/guest)" -ForegroundColor Cyan
         Write-Host "📝 Portainer: http://localhost:9000" -ForegroundColor Cyan

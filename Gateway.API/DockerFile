@@ -8,16 +8,16 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy project file
-COPY ["src/ApiGateway/Gateway.API/Gateway.API.csproj", "src/ApiGateway/Gateway.API/"]
+COPY ["Gateway.API/Gateway.API.csproj", "Gateway.API/"]
 
 # Restore dependencies
-RUN dotnet restore "src/ApiGateway/Gateway.API/Gateway.API.csproj"
+RUN dotnet restore "Gateway.API/Gateway.API.csproj"
 
 # Copy everything else
 COPY . .
 
 # Build
-WORKDIR "/src/src/ApiGateway/Gateway.API"
+WORKDIR "Gateway.API"
 RUN dotnet build "Gateway.API.csproj" -c Release -o /app/build
 
 FROM build AS publish

@@ -8,23 +8,23 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy project files
-COPY ["src/Services/Product/ThirdStepTask.Product.API/ThirdStepTask.Product.API.csproj", "src/Services/Product/ThirdStepTask.Product.API/"]
-COPY ["src/Services/Product/ThirdStepTask.Product.Application/ThirdStepTask.Product.Application.csproj", "src/Services/Product/ThirdStepTask.Product.Application/"]
-COPY ["src/Services/Product/ThirdStepTask.Product.Domain/ThirdStepTask.Product.Domain.csproj", "src/Services/Product/ThirdStepTask.Product.Domain/"]
-COPY ["src/Services/Product/ThirdStepTask.Product.Infrastructure/ThirdStepTask.Product.Infrastructure.csproj", "src/Services/Product/ThirdStepTask.Product.Infrastructure/"]
-COPY ["src/Services/Product/ThirdStepTask.Product.Persistence/ThirdStepTask.Product.Persistence.csproj", "src/Services/Product/ThirdStepTask.Product.Persistence/"]
-COPY ["src/BuildingBlocks/Common/Common.csproj", "src/BuildingBlocks/Common/"]
-COPY ["src/BuildingBlocks/EventBus/EventBus.csproj", "src/BuildingBlocks/EventBus/"]
-COPY ["src/BuildingBlocks/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj", "src/BuildingBlocks/EventBus.RabbitMQ/"]
+COPY ["ThirdStepTask.Product.API/ThirdStepTask.Product.API.csproj", "ThirdStepTask.Product.API/"]
+COPY ["ThirdStepTask.Product.Application/ThirdStepTask.Product.Application.csproj", "ThirdStepTask.Product.Application/"]
+COPY ["ThirdStepTask.Product.Domain/ThirdStepTask.Product.Domain.csproj", "ThirdStepTask.Product.Domain/"]
+COPY ["ThirdStepTask.Product.Infrastructure/ThirdStepTask.Product.Infrastructure.csproj", "ThirdStepTask.Product.Infrastructure/"]
+COPY ["ThirdStepTask.Product.Persistence/ThirdStepTask.Product.Persistence.csproj", "ThirdStepTask.Product.Persistence/"]
+COPY ["Common/Common.csproj", "Common/"]
+COPY ["EventBus/EventBus.csproj", "EventBus/"]
+COPY ["EventBus.RabbitMQ/EventBus.RabbitMQ.csproj", "EventBus.RabbitMQ/"]
 
 # Restore dependencies
-RUN dotnet restore "src/Services/Product/ThirdStepTask.Product.API/ThirdStepTask.Product.API.csproj"
+RUN dotnet restore "ThirdStepTask.Product.API/ThirdStepTask.Product.API.csproj"
 
 # Copy everything else
 COPY . .
 
 # Build
-WORKDIR "/src/src/Services/Product/ThirdStepTask.Product.API"
+WORKDIR "ThirdStepTask.Product.API"
 RUN dotnet build "ThirdStepTask.Product.API.csproj" -c Release -o /app/build
 
 FROM build AS publish

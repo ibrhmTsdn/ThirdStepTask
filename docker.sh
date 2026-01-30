@@ -32,7 +32,7 @@ case "$1" in
     echo "📝 API Gateway: http://localhost:5000"
     echo "📝 Auth API: http://localhost:5001"
     echo "📝 Product API: http://localhost:5002"
-    echo "📝 SQL Server: localhost:1433 (sa/MyProject2024!@#)"
+    echo "📝 SQL Server: localhost:1433 (sa/Ibrahim38-)"
     echo "📝 Redis: localhost:6379"
     echo "📝 RabbitMQ Management: http://localhost:15672 (guest/guest)"
     echo "📝 Portainer: http://localhost:9000"

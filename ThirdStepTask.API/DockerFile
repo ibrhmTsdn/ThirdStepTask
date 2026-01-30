@@ -8,21 +8,21 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy project files
-COPY ["src/Services/Auth/ThirdStepTask.Auth.API/ThirdStepTask.Auth.API.csproj", "src/Services/Auth/ThirdStepTask.Auth.API/"]
-COPY ["src/Services/Auth/ThirdStepTask.Auth.Application/ThirdStepTask.Auth.Application.csproj", "src/Services/Auth/ThirdStepTask.Auth.Application/"]
-COPY ["src/Services/Auth/ThirdStepTask.Auth.Domain/ThirdStepTask.Auth.Domain.csproj", "src/Services/Auth/ThirdStepTask.Auth.Domain/"]
-COPY ["src/Services/Auth/ThirdStepTask.Auth.Infrastructure/ThirdStepTask.Auth.Infrastructure.csproj", "src/Services/Auth/ThirdStepTask.Auth.Infrastructure/"]
-COPY ["src/Services/Auth/ThirdStepTask.Auth.Persistence/ThirdStepTask.Auth.Persistence.csproj", "src/Services/Auth/ThirdStepTask.Auth.Persistence/"]
-COPY ["src/BuildingBlocks/Common/Common.csproj", "src/BuildingBlocks/Common/"]
+COPY ["ThirdStepTask.API/ThirdStepTask.Auth.API.csproj", "ThirdStepTask.API/"]
+COPY ["ThirdStepTask.Auth.Application/ThirdStepTask.Auth.Application.csproj", "ThirdStepTask.Auth.Application/"]
+COPY ["ThirdStepTask.Auth.Domain/ThirdStepTask.Auth.Domain.csproj", "ThirdStepTask.Auth.Domain/"]
+COPY ["ThirdStepTask.Auth.Infrastructure/ThirdStepTask.Auth.Infrastructure.csproj", "ThirdStepTask.Auth.Infrastructure/"]
+COPY ["ThirdStepTask.Auth.Persistence/ThirdStepTask.Auth.Persistence.csproj", "ThirdStepTask.Auth.Persistence/"]
+COPY ["Common/Common.csproj", "Common/"]
 
 # Restore dependencies
-RUN dotnet restore "src/Services/Auth/ThirdStepTask.Auth.API/ThirdStepTask.Auth.API.csproj"
+RUN dotnet restore "ThirdStepTask.API/ThirdStepTask.Auth.API.csproj"
 
 # Copy everything else
 COPY . .
 
 # Build
-WORKDIR "/src/src/Services/Auth/ThirdStepTask.Auth.API"
+WORKDIR "ThirdStepTask.API"
 RUN dotnet build "ThirdStepTask.Auth.API.csproj" -c Release -o /app/build
 
 FROM build AS publish

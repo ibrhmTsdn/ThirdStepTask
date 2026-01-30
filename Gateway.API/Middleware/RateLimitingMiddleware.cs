@@ -58,7 +58,12 @@ namespace Gateway.API.Middleware
             // Get or create client info
             var clientInfo = _requestLog.GetOrAdd(clientId, _ => new ClientRequestInfo());
 
-            lock (clientInfo)
+            bool shouldContinue = true;
+            int remainingCount = 0;
+
+            // Use async-safe synchronization with SemaphoreSlim
+            await clientInfo.Semaphore.WaitAsync();
+            try
             {
                 // Clean old requests
                 clientInfo.Requests.RemoveAll(r => (now - r) > _timeWindow);
@@ -77,26 +82,40 @@ namespace Gateway.API.Middleware
                         _logger.LogError("Client blocked for excessive requests: {ClientId}", clientId);
                     }
 
-                    await ReturnRateLimitError(context, "Rate limit exceeded", (int)_timeWindow.TotalSeconds);
-                    return;
+                    shouldContinue = false;
                 }
-
-                // Check global limit
-                var totalRequests = _requestLog.Values.Sum(ci => ci.Requests.Count);
-                if (totalRequests >= _globalLimit)
+                else
                 {
-                    _logger.LogWarning("Global rate limit exceeded: {TotalRequests}", totalRequests);
-                    await ReturnRateLimitError(context, "Service temporarily unavailable due to high traffic", 60);
-                    return;
+                    // Check global limit
+                    var totalRequests = _requestLog.Values.Sum(ci => ci.Requests.Count);
+                    if (totalRequests >= _globalLimit)
+                    {
+                        _logger.LogWarning("Global rate limit exceeded: {TotalRequests}", totalRequests);
+                        shouldContinue = false;
+                    }
+                    else
+                    {
+                        // Add current request
+                        clientInfo.Requests.Add(now);
+                        remainingCount = _perIpLimit - clientInfo.Requests.Count;
+                    }
                 }
+            }
+            finally
+            {
+                clientInfo.Semaphore.Release();
+            }
 
-                // Add current request
-                clientInfo.Requests.Add(now);
+            // Handle rate limit exceeded outside of semaphore
+            if (!shouldContinue)
+            {
+                await ReturnRateLimitError(context, "Rate limit exceeded", (int)_timeWindow.TotalSeconds);
+                return;
             }
 
             // Add rate limit headers
             context.Response.Headers["X-RateLimit-Limit"] = _perIpLimit.ToString();
-            context.Response.Headers["X-RateLimit-Remaining"] = (_perIpLimit - clientInfo.Requests.Count).ToString();
+            context.Response.Headers["X-RateLimit-Remaining"] = remainingCount.ToString();
             context.Response.Headers["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.Add(_timeWindow).ToUnixTimeSeconds().ToString();
 
             await _next(context);
@@ -144,6 +163,7 @@ namespace Gateway.API.Middleware
         private class ClientRequestInfo
         {
             public List<DateTime> Requests { get; } = new();
+            public SemaphoreSlim Semaphore { get; } = new SemaphoreSlim(1, 1);
         }
     }
 }

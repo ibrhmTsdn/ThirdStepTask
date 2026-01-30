@@ -1,4 +1,5 @@
-﻿using ThirdStepTask.Auth.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using ThirdStepTask.Auth.Domain.Entities;
 using ThirdStepTask.Auth.Domain.Interfaces;
 using ThirdStepTask.Auth.Persistence.Context;
 

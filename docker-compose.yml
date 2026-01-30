@@ -87,7 +87,7 @@ services:
   gateway-api:
     build:
       context: .
-      dockerfile: src/ApiGateway/Gateway.API/DockerFile
+      dockerfile: Gateway.API/DockerFile
     container_name: gateway-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -119,7 +119,7 @@ services:
   auth-api:
     build:
       context: .
-      dockerfile: src/Services/Auth/ThirdStepTask.Auth.API/DockerFile
+      dockerfile: ThirdStepTask.API/DockerFile
     container_name: auth-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -149,7 +149,7 @@ services:
   product-api:
     build:
       context: .
-      dockerfile: src/Services/Product/ThirdStepTask.Product.API/DockerFile
+      dockerfile: ThirdStepTask.Product.API/DockerFile
     container_name: product-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
